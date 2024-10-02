@@ -1,9 +1,11 @@
 package app;
 
+import app.mesh.Axis;
 import app.mesh.Mesh;
 import app.mesh.Triangle;
 import lwjglutils.ShaderUtils;
 import org.lwjgl.glfw.*;
+import transforms.*;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -11,30 +13,57 @@ import static org.lwjgl.opengl.GL20.*;
 
 public class Renderer extends AbstractRenderer
 {
-    private Mesh triangle;
+    private Mesh axis, triangle;
 
-    private int shaderTriangle;
+    private int shaderAxis, shaderTriangle;
 
     private int alternativeColor;
 
+    private Camera cam;
+    private Mat4PerspRH projection;
+
     public void init()
     {
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.1F, 0.1F, 0.1F, 1.0F);
 
+        axis = new Axis();
         triangle = new Triangle();
 
+        shaderAxis = ShaderUtils.loadProgram("/axis");
         shaderTriangle = ShaderUtils.loadProgram("/triangle");
+
+        cam = new Camera().withPosition(new Vec3D(0.5, -1.5, 1))
+                .withAzimuth(Math.toRadians(90))
+                .withZenith(Math.toRadians(-15))
+                .withFirstPerson(true);
+
+        projection = new Mat4PerspRH(Math.toRadians(75), (float) height / width, 0.1, 1000);
     }
 
     public void display()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glUseProgram(shaderAxis);
+
+        setMatrixUniforms(shaderAxis);
+
+        axis.getBuffers().draw(GL_LINES, shaderAxis);
+
+        /*
         glUseProgram(shaderTriangle);
 
+        setMatrixUniforms(shaderTriangle);
         glUniform1i(glGetUniformLocation(shaderTriangle, "alt_color"), alternativeColor);
 
         triangle.getBuffers().draw(GL_TRIANGLES, shaderTriangle);
+        */
+    }
+
+    private void setMatrixUniforms(int shader)
+    {
+        glUniformMatrix4fv(glGetUniformLocation(shader, "view"), false, cam.getViewMatrix().floatArray());
+        glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), false, projection.floatArray());
     }
 
 	private GLFWKeyCallback keyCallback = new GLFWKeyCallback()

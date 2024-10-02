@@ -2,18 +2,23 @@ package app.mesh;
 
 import lwjglutils.OGLBuffers;
 
-public class Triangle extends Mesh
+public class Axis extends Mesh
 {
-    public Triangle()
+    public Axis()
     {
         vertexBuffer = new float[]
         {
-            0, 1, 0,     1, 0, 0,
-            -1, 0, 0,    0, 1, 0,
-            1, -1, 0,    0, 0, 1,
+            0, 0, 0,     1, 0, 0,
+            1, 0, 0,     1, 0, 0,
+
+            0, 0, 0,     0, 1, 0,
+            0, 1, 0,     0, 1, 0,
+
+            0, 0, 0,     0, 0, 1,
+            0, 0, 1,     0, 0, 1,
         };
 
-        indexBuffer = new int[] { 0, 1, 2, };
+        indexBuffer = new int[] { 0, 1, 2, 3, 4, 5 };
 
         attributes = new OGLBuffers.Attrib[]
         {
