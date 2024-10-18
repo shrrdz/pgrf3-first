@@ -3,7 +3,6 @@ package app;
 import app.mesh.Axis;
 import app.mesh.Grid;
 import app.mesh.Mesh;
-import app.mesh.Triangle;
 import lwjglutils.OGLTexture2D;
 import lwjglutils.ShaderUtils;
 import org.lwjgl.glfw.*;
@@ -11,22 +10,17 @@ import transforms.*;
 
 import java.io.IOException;
 
-import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
 public class Renderer extends AbstractRenderer
 {
-    private Mesh axis, triangle, grid;
+    private Mesh axis, grid;
 
-    private int shaderAxis, shaderTriangle, shaderGrid;
-
-//  private int alternativeColor;
+    private int shaderAxis, shaderGrid;
 
     private Camera cam;
     private Mat4PerspRH projection;
-
-    private float theta = 0;
 
     private OGLTexture2D bricks;
 
@@ -37,14 +31,12 @@ public class Renderer extends AbstractRenderer
         glClearColor(0.1F, 0.1F, 0.1F, 1.0F);
 
         axis = new Axis();
-        triangle = new Triangle();
         grid = new Grid(20, 20);
 
         shaderAxis = ShaderUtils.loadProgram("/axis");
-        shaderTriangle = ShaderUtils.loadProgram("/triangle");
         shaderGrid = ShaderUtils.loadProgram("/grid");
 
-        cam = new Camera().withPosition(new Vec3D(0, -1.5, 1.5))
+        cam = new Camera().withPosition(new Vec3D(0, -4, 4))
                 .withAzimuth(Math.toRadians(90))
                 .withZenith(Math.toRadians(-45))
                 .withFirstPerson(true);
@@ -72,27 +64,16 @@ public class Renderer extends AbstractRenderer
         setMatrixUniforms(shaderAxis);
 
         axis.getBuffers().draw(GL_LINES, shaderAxis);
-
-        // triangle
-        glUseProgram(shaderTriangle);
-
-        setMatrixUniforms(shaderTriangle);
-        glUniform1i(glGetUniformLocation(shaderTriangle, "alt_color"), alternativeColor);
-
-        triangle.getBuffers().draw(GL_TRIANGLES, shaderTriangle);
         */
 
         // grid
         glUseProgram(shaderGrid);
 
         setMatrixUniforms(shaderGrid);
-        glUniform1f(glGetUniformLocation(shaderGrid, "theta"), theta);
 
         bricks.bind();
 
         grid.getBuffers().draw(GL_TRIANGLES, shaderGrid);
-
-        theta += 0.01F;
     }
 
     private void setMatrixUniforms(int shader)
@@ -106,12 +87,7 @@ public class Renderer extends AbstractRenderer
 		@Override
 		public void invoke(long window, int key, int scancode, int action, int mods)
         {
-            /*
-            if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-            {
-                alternativeColor = alternativeColor == 0 ? 1 : 0;
-            }
-            */
+
         }
     };
     
@@ -144,7 +120,8 @@ public class Renderer extends AbstractRenderer
     
     private GLFWScrollCallback scrollCallback = new GLFWScrollCallback()
     {
-        @Override public void invoke (long window, double dx, double dy)
+        @Override
+        public void invoke (long window, double dx, double dy)
         {
 
         }
