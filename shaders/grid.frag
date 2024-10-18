@@ -37,9 +37,11 @@ vec3 calculate_directional(vec3 direction, vec3 color, float intensity)
     if (lambertian != 0.0)
     {
         vec3 view_direction = normalize(vec3(0, -4, 4) - vec3(0, 0, 0));
-        vec3 reflect_direction = reflect(-light_direction, normal);
+//      vec3 reflect_direction = reflect(-light_direction, normal);
+        vec3 halfway = normalize(view_direction + light_direction);
 
-        specular_highlight = pow(max(0.0, dot(reflect_direction, view_direction)), specular_exponent);
+        specular_highlight = pow(max(dot(halfway, normal), 0.0), specular_exponent);
+//      specular_highlight = pow(max(0.0, dot(reflect_direction, view_direction)), specular_exponent);
     }
 
     vec3 diffuse  = color * intensity * lambertian * vec3(texture(bricks, frag_texcoord));
