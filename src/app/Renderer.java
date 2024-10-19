@@ -10,6 +10,7 @@ import transforms.*;
 
 import java.io.IOException;
 
+import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
@@ -20,7 +21,11 @@ public class Renderer extends AbstractRenderer
     private int shaderAxis, shaderGrid;
 
     private Camera cam;
-    private Mat4PerspRH projection;
+
+    private Mat4 projection;
+
+    private Mat4PerspRH perspective;
+    private Mat4OrthoRH orthogonal;
 
     private OGLTexture2D bricks;
 
@@ -41,7 +46,10 @@ public class Renderer extends AbstractRenderer
                 .withZenith(Math.toRadians(-45))
                 .withFirstPerson(true);
 
-        projection = new Mat4PerspRH(Math.toRadians(75), (float) height / width, 0.1, 1000);
+        perspective = new Mat4PerspRH(Math.toRadians(75), (float) height / width, 0.1, 1000);
+        orthogonal = new Mat4OrthoRH(10, 10, 0.1, 1000);
+
+        projection = perspective;
 
         try
         {
@@ -87,7 +95,10 @@ public class Renderer extends AbstractRenderer
 		@Override
 		public void invoke(long window, int key, int scancode, int action, int mods)
         {
-
+            if (key == GLFW_KEY_P && action == GLFW_PRESS)
+            {
+                projection = (projection == perspective) ? orthogonal : perspective;
+            }
         }
     };
     
