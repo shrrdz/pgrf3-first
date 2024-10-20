@@ -125,6 +125,16 @@ public class Renderer extends AbstractRenderer
                 cam = cam.right(0.1);
             }
 
+            if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+            {
+                cam = cam.down(0.1);
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+            {
+                cam = cam.up(0.1);
+            }
+
             if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             {
                 glfwSetWindowShouldClose(window, true);
