@@ -29,6 +29,11 @@ public class Renderer extends AbstractRenderer
 
     private OGLTexture2D bricks;
 
+    private boolean initial = true;
+
+    private final double[] previous_x = new double[1];
+    private final double[] previous_y = new double[1];
+
     public void init()
     {
         glEnable(GL_DEPTH_TEST);
@@ -99,6 +104,31 @@ public class Renderer extends AbstractRenderer
             {
                 projection = (projection == perspective) ? orthogonal : perspective;
             }
+
+            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            {
+                cam = cam.forward(0.1);
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            {
+                cam = cam.backward(0.1);
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            {
+                cam = cam.left(0.1);
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            {
+                cam = cam.right(0.1);
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            {
+                glfwSetWindowShouldClose(window, true);
+            }
         }
     };
     
@@ -119,13 +149,29 @@ public class Renderer extends AbstractRenderer
 
         }
     };
-	
-    private GLFWCursorPosCallback cpCallbacknew = new GLFWCursorPosCallback()
+
+    private GLFWCursorPosCallback cursorPosCallback = new GLFWCursorPosCallback()
     {
         @Override
         public void invoke(long window, double x, double y)
         {
+            if (initial)
+            {
+                glfwGetCursorPos(window, previous_x, previous_y);
 
+                initial = false;
+            }
+
+            int dx = (int) (x - previous_x[0]);
+            int dy = (int) (y - previous_y[0]);
+
+            double moveD = Math.toRadians(-0.05);
+
+            cam = cam.addAzimuth(moveD * dx);
+            cam = cam.addZenith(moveD * dy);
+
+            previous_x[0] = (int) x;
+            previous_y[0] = (int) y;
         }
     };
     
@@ -141,5 +187,17 @@ public class Renderer extends AbstractRenderer
     public GLFWKeyCallback getKeyCallback()
     {
         return keyCallback;
+    }
+
+    public GLFWCursorPosCallback getCursorCallback()
+    {
+        return new GLFWCursorPosCallback()
+        {
+            @Override
+            public void invoke(long window, double xpos, double ypos)
+            {
+                cursorPosCallback.invoke(window, xpos, ypos);
+            }
+        };
     }
 }

@@ -158,6 +158,8 @@ public class LwjglWindow {
 		// Enable v-sync
 		glfwSwapInterval(1);
 
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 		// Make the window visible
 		glfwShowWindow(window);
 	}
@@ -191,5 +193,4 @@ public class LwjglWindow {
 			glfwPollEvents();
 		}
 	}
-
 }
