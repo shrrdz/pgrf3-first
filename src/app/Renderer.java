@@ -16,9 +16,9 @@ import static org.lwjgl.opengl.GL20.*;
 
 public class Renderer extends AbstractRenderer
 {
-    private Mesh axis, grid;
+    private Mesh axis, sphere;
 
-    private int shaderAxis, shaderGrid;
+    private int shaderAxis, shaderSphere;
 
     private Camera cam;
 
@@ -31,8 +31,8 @@ public class Renderer extends AbstractRenderer
 
     private boolean initial = true;
 
-    private final double[] previous_x = new double[1];
-    private final double[] previous_y = new double[1];
+    private final double[] previousX = new double[1];
+    private final double[] previousY = new double[1];
 
     public void init()
     {
@@ -41,10 +41,10 @@ public class Renderer extends AbstractRenderer
         glClearColor(0.1F, 0.1F, 0.1F, 1.0F);
 
         axis = new Axis();
-        grid = new Grid(20, 20);
+        sphere = new Grid(20, 20);
 
         shaderAxis = ShaderUtils.loadProgram("/axis");
-        shaderGrid = ShaderUtils.loadProgram("/grid");
+        shaderSphere = ShaderUtils.loadProgram("/grid", "/universal");
 
         cam = new Camera().withPosition(new Vec3D(0, -4, 4))
                 .withAzimuth(Math.toRadians(90))
@@ -70,23 +70,21 @@ public class Renderer extends AbstractRenderer
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        /*
         // axis
         glUseProgram(shaderAxis);
 
         setMatrixUniforms(shaderAxis);
 
         axis.getBuffers().draw(GL_LINES, shaderAxis);
-        */
 
         // grid
-        glUseProgram(shaderGrid);
+        glUseProgram(shaderSphere);
 
-        setMatrixUniforms(shaderGrid);
+        setMatrixUniforms(shaderSphere);
 
         bricks.bind();
 
-        grid.getBuffers().draw(GL_TRIANGLES, shaderGrid);
+        sphere.getBuffers().draw(GL_TRIANGLES, shaderSphere);
     }
 
     private void setMatrixUniforms(int shader)
@@ -167,21 +165,21 @@ public class Renderer extends AbstractRenderer
         {
             if (initial)
             {
-                glfwGetCursorPos(window, previous_x, previous_y);
+                glfwGetCursorPos(window, previousX, previousY);
 
                 initial = false;
             }
 
-            int dx = (int) (x - previous_x[0]);
-            int dy = (int) (y - previous_y[0]);
+            int dx = (int) (x - previousX[0]);
+            int dy = (int) (y - previousY[0]);
 
             double moveD = Math.toRadians(-0.05);
 
             cam = cam.addAzimuth(moveD * dx);
             cam = cam.addZenith(moveD * dy);
 
-            previous_x[0] = (int) x;
-            previous_y[0] = (int) y;
+            previousX[0] = (int) x;
+            previousY[0] = (int) y;
         }
     };
     

@@ -43,7 +43,7 @@ public final class ShaderUtils {
 
 	/**
 	 * Load, create, compile, attach and link shader sources defined as files
-	 * 
+	 *
 	 * @param gl
 	 *            GL context
 	 * @param vertexShaderFileName
@@ -65,8 +65,8 @@ public final class ShaderUtils {
 	 *            full path name of compute shader file with/without file
 	 *            extension (COMPUTE_SHADER_EXTENSION) or null
 	 * @param functionBeforeLinking
-	 * 			  function called before linking shader program, 
-	 * 			  int-valued argument defines shader program id 
+	 * 			  function called before linking shader program,
+	 * 			  int-valued argument defines shader program id
 	 * @return new id of shader program
 	 */
 	public static int loadProgram(String vertexShaderFileName, String fragmentShaderFileName,
@@ -113,6 +113,25 @@ public final class ShaderUtils {
 		return loadProgram(vertexShaderFileName, fragmentShaderFileName,
 				geometryShaderFileName, tessControlShaderFileName, tessEvaluationShaderFileName,
 				computeShaderFileName, (shaderProgram)->{});
+	}
+
+	/**
+	 * Load, create, compile, attach and link shader sources defined as files
+	 *
+	 * @param gl
+	 *            GL context
+	 * @param vertexShaderFileName
+	 *            full path name of vertex shader file with/without file
+	 *            extension (VERTEX_SHADER_EXTENSION) or null
+	 * @param fragmentShaderFileName
+	 *            full path name of fragment shader file with/without file
+	 *            extension (FRAGMENT_SHADER_EXTENSION) or null
+	 */
+	public static int loadProgram(String vertexShaderFileName, String fragmentShaderFileName) {
+		String blank = "";
+		return loadProgram(vertexShaderFileName, fragmentShaderFileName,
+				blank, blank, blank,
+				blank, (shaderProgram)->{});
 	}
 
 	/**
