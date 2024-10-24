@@ -34,6 +34,10 @@ public class Renderer extends AbstractRenderer
     private final double[] previousX = new double[1];
     private final double[] previousY = new double[1];
 
+    private final double observerSpeed = 4;
+
+    private double deltaTick;
+
     public void init()
     {
         glEnable(GL_DEPTH_TEST);
@@ -68,6 +72,8 @@ public class Renderer extends AbstractRenderer
 
     public void display()
     {
+        deltaTick = LwjglWindow.deltaTick();
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // axis
@@ -105,32 +111,32 @@ public class Renderer extends AbstractRenderer
 
             if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             {
-                cam = cam.forward(0.1);
+                cam = cam.forward(observerSpeed * deltaTick);
             }
 
             if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
             {
-                cam = cam.backward(0.1);
+                cam = cam.backward(observerSpeed * deltaTick);
             }
 
             if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
             {
-                cam = cam.left(0.1);
+                cam = cam.left(observerSpeed * deltaTick);
             }
 
             if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             {
-                cam = cam.right(0.1);
+                cam = cam.right(observerSpeed * deltaTick);
             }
 
             if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
             {
-                cam = cam.down(0.1);
+                cam = cam.down(observerSpeed * deltaTick);
             }
 
             if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
             {
-                cam = cam.up(0.1);
+                cam = cam.up(observerSpeed * deltaTick);
             }
 
             if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)

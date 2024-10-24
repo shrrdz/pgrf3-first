@@ -193,4 +193,16 @@ public class LwjglWindow {
 			glfwPollEvents();
 		}
 	}
+
+    private static double lastTick;
+
+	public static double deltaTick()
+	{
+		double currentTick = glfwGetTime();
+
+        double delta = currentTick - lastTick;
+		lastTick = currentTick;
+
+		return delta;
+	}
 }
