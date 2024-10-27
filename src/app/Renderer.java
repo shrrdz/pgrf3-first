@@ -47,12 +47,14 @@ public class Renderer extends AbstractRenderer
         axis = new Axis();
         sphere = new Grid(20, 20);
 
-        shaderAxis = ShaderUtils.loadProgram("/axis");
-        shaderSphere = ShaderUtils.loadProgram("/grid", "/universal");
+        sphere.translate(2, 2, 0);
 
-        cam = new Camera().withPosition(new Vec3D(0, -4, 4))
+        shaderAxis = ShaderUtils.loadProgram("/axis");
+        shaderSphere = ShaderUtils.loadProgram("/sphere", "/universal");
+
+        cam = new Camera().withPosition(new Vec3D(0, -2, 2))
                 .withAzimuth(Math.toRadians(90))
-                .withZenith(Math.toRadians(-45))
+                .withZenith(Math.toRadians(-30))
                 .withFirstPerson(true);
 
         perspective = new Mat4PerspRH(Math.toRadians(75), (float) height / width, 0.1, 1000);
@@ -79,22 +81,23 @@ public class Renderer extends AbstractRenderer
         // axis
         glUseProgram(shaderAxis);
 
-        setMatrixUniforms(shaderAxis);
+        setMatrixUniforms(shaderAxis, axis);
 
         axis.getBuffers().draw(GL_LINES, shaderAxis);
 
-        // grid
+        // sphere
         glUseProgram(shaderSphere);
 
-        setMatrixUniforms(shaderSphere);
+        setMatrixUniforms(shaderSphere, sphere);
 
         bricks.bind();
 
         sphere.getBuffers().draw(GL_TRIANGLES, shaderSphere);
     }
 
-    private void setMatrixUniforms(int shader)
+    private void setMatrixUniforms(int shader, Mesh mesh)
     {
+        glUniformMatrix4fv(glGetUniformLocation(shader, "model"), false, mesh.getModel().floatArray());
         glUniformMatrix4fv(glGetUniformLocation(shader, "view"), false, cam.getViewMatrix().floatArray());
         glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), false, projection.floatArray());
     }
