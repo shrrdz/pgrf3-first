@@ -9,6 +9,7 @@ import org.lwjgl.glfw.*;
 import transforms.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -37,6 +38,8 @@ public class Renderer extends AbstractRenderer
     private final double observerSpeed = 4;
 
     private double deltaTick;
+
+    private final int[] display = new int[2];
 
     public void init()
     {
@@ -81,25 +84,27 @@ public class Renderer extends AbstractRenderer
         // axis
         glUseProgram(shaderAxis);
 
-        setMatrixUniforms(shaderAxis, axis);
+        setUniversalUniforms(shaderAxis, axis);
 
         axis.getBuffers().draw(GL_LINES, shaderAxis);
 
         // sphere
         glUseProgram(shaderSphere);
 
-        setMatrixUniforms(shaderSphere, sphere);
+        setUniversalUniforms(shaderSphere, sphere);
 
         bricks.bind();
 
         sphere.getBuffers().draw(GL_TRIANGLES, shaderSphere);
     }
 
-    private void setMatrixUniforms(int shader, Mesh mesh)
+    private void setUniversalUniforms(int shader, Mesh mesh)
     {
         glUniformMatrix4fv(glGetUniformLocation(shader, "model"), false, mesh.getModel().floatArray());
         glUniformMatrix4fv(glGetUniformLocation(shader, "view"), false, cam.getViewMatrix().floatArray());
         glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), false, projection.floatArray());
+
+        glUniform1iv(glGetUniformLocation(shader, "display"), display);
     }
 
 	private GLFWKeyCallback keyCallback = new GLFWKeyCallback()
@@ -140,6 +145,28 @@ public class Renderer extends AbstractRenderer
             if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
             {
                 cam = cam.up(observerSpeed * deltaTick);
+            }
+
+            // default display
+            if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+            {
+                Arrays.fill(display, 0);
+            }
+
+            // depth buffer display
+            if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
+            {
+                Arrays.fill(display, 0);
+
+                display[0] = 1;
+            }
+
+            // normal display
+            if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
+            {
+                Arrays.fill(display, 0);
+
+                display[1] = 1;
             }
 
             if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
