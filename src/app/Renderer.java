@@ -39,7 +39,7 @@ public class Renderer extends AbstractRenderer
 
     private double deltaTick;
 
-    private final int[] display = new int[2];
+    private final int[] display = new int[3];
 
     public void init()
     {
@@ -153,12 +153,20 @@ public class Renderer extends AbstractRenderer
                 Arrays.fill(display, 0);
             }
 
+            // no-texture lighting display
+            if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
+            {
+                Arrays.fill(display, 0);
+
+                display[0] = 1;
+            }
+
             // depth buffer display
             if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
             {
                 Arrays.fill(display, 0);
 
-                display[0] = 1;
+                display[1] = 1;
             }
 
             // normal display
@@ -166,7 +174,7 @@ public class Renderer extends AbstractRenderer
             {
                 Arrays.fill(display, 0);
 
-                display[1] = 1;
+                display[2] = 1;
             }
 
             if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -194,7 +202,7 @@ public class Renderer extends AbstractRenderer
         }
     };
 
-    private GLFWCursorPosCallback cursorPosCallback = new GLFWCursorPosCallback()
+    private final GLFWCursorPosCallback cursorPosCallback = new GLFWCursorPosCallback()
     {
         @Override
         public void invoke(long window, double x, double y)
