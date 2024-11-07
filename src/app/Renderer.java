@@ -17,9 +17,9 @@ import static org.lwjgl.opengl.GL20.*;
 
 public class Renderer extends AbstractRenderer
 {
-    private Mesh axis, sphere;
+    private Mesh axis, sphere, torus;
 
-    private int shaderAxis, shaderSphere;
+    private int shaderAxis, shaderSphere, shaderTorus;
 
     private Camera cam;
 
@@ -49,11 +49,14 @@ public class Renderer extends AbstractRenderer
 
         axis = new Axis();
         sphere = new Grid(20, 20);
+        torus = new Grid(20, 20);
 
         sphere.translate(2, 2, 0);
+        torus.translate(-2, 2, 0);
 
         shaderAxis = ShaderUtils.loadProgram("/axis");
         shaderSphere = ShaderUtils.loadProgram("/sphere", "/universal");
+        shaderTorus = ShaderUtils.loadProgram("/torus", "/universal");
 
         cam = new Camera().withPosition(new Vec3D(0, -2, 2))
                 .withAzimuth(Math.toRadians(90))
@@ -96,6 +99,15 @@ public class Renderer extends AbstractRenderer
         bricks.bind();
 
         sphere.getBuffers().draw(GL_TRIANGLES, shaderSphere);
+
+        // torus
+        glUseProgram(shaderTorus);
+
+        setUniversalUniforms(shaderTorus, torus);
+
+        bricks.bind();
+
+        torus.getBuffers().draw(GL_TRIANGLES, shaderTorus);
     }
 
     private void setUniversalUniforms(int shader, Mesh mesh)
