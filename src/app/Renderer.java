@@ -17,9 +17,9 @@ import static org.lwjgl.opengl.GL20.*;
 
 public class Renderer extends AbstractRenderer
 {
-    private Mesh axis, sphere, torus;
+    private Mesh axis, plane, sphere, torus;
 
-    private int shaderAxis, shaderSphere, shaderTorus;
+    private int shaderAxis, shaderPlane, shaderSphere, shaderTorus;
 
     private Camera cam;
 
@@ -28,7 +28,7 @@ public class Renderer extends AbstractRenderer
     private Mat4PerspRH perspective;
     private Mat4OrthoRH orthogonal;
 
-    private OGLTexture2D bricks;
+    private OGLTexture2D checker, bricks;
 
     private boolean initial = true;
 
@@ -48,13 +48,18 @@ public class Renderer extends AbstractRenderer
         glClearColor(0.1F, 0.1F, 0.1F, 1.0F);
 
         axis = new Axis();
+        plane = new Grid(2, 2);
         sphere = new Grid(20, 20);
         torus = new Grid(20, 20);
 
+        plane.scale(8, 8, 1);
+
+        plane.translate(0, 0, -1.5);
         sphere.translate(2, 2, 0);
         torus.translate(-2, 2, 0);
 
         shaderAxis = ShaderUtils.loadProgram("/axis");
+        shaderPlane = ShaderUtils.loadProgram("/plane", "/universal");
         shaderSphere = ShaderUtils.loadProgram("/sphere", "/universal");
         shaderTorus = ShaderUtils.loadProgram("/torus", "/universal");
 
@@ -70,6 +75,7 @@ public class Renderer extends AbstractRenderer
 
         try
         {
+            checker = new OGLTexture2D("checker.png");
             bricks = new OGLTexture2D("bricks.png");
         }
         catch (IOException exception)
@@ -90,6 +96,15 @@ public class Renderer extends AbstractRenderer
         setUniversalUniforms(shaderAxis, axis);
 
         axis.getBuffers().draw(GL_LINES, shaderAxis);
+
+        // plane
+        glUseProgram(shaderPlane);
+
+        setUniversalUniforms(shaderPlane, plane);
+
+        checker.bind();
+
+        plane.getBuffers().draw(GL_TRIANGLES, shaderPlane);
 
         // sphere
         glUseProgram(shaderSphere);
