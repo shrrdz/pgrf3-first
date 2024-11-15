@@ -2,10 +2,13 @@
 
 in vec3 frag_normal;
 in vec2 frag_texcoord;
+in vec4 frag_shadowcoord;
 
 uniform bool display[3];
+uniform bool receive_shadows;
 
-uniform sampler2D bricks;
+uniform sampler2D bitmap;
+uniform sampler2D shadowmap;
 
 out vec4 frag_color;
 
@@ -69,7 +72,7 @@ vec3 calculate_directional(vec3 direction, vec3 color, float intensity)
 
 void main()
 {
-    base_color = display[0] ? vec3(0.5, 0.5, 0.5) : vec3(texture(bricks, frag_texcoord));
+    base_color = display[0] ? vec3(0.5, 0.5, 0.5) : vec3(texture(bitmap, frag_texcoord));
 
     vec3 total = calculate_ambient(ambient_color, ambient_intensity);
 
@@ -87,6 +90,13 @@ void main()
     }
     else
     {
-        frag_color = vec4(total, 1.0);
+        float visibility = 1;
+        float bias = 0.005;
+
+        if(receive_shadows && texture(shadowmap, frag_shadowcoord.xy).z < frag_shadowcoord.z - bias) {
+            visibility = 0.5;
+        }
+
+        frag_color = visibility * vec4(total, 1.0);
     }
 }

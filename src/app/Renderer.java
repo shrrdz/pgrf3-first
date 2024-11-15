@@ -3,6 +3,7 @@ package app;
 import app.mesh.Axis;
 import app.mesh.Grid;
 import app.mesh.Mesh;
+import lwjglutils.OGLRenderTarget;
 import lwjglutils.OGLTexture2D;
 import lwjglutils.ShaderUtils;
 import org.lwjgl.glfw.*;
@@ -14,12 +15,13 @@ import java.util.Arrays;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL30.*;
 
 public class Renderer extends AbstractRenderer
 {
     private Mesh axis, plane, sphere, torus;
 
-    private int shaderAxis, shaderPlane, shaderSphere, shaderTorus;
+    private int shaderAxis, shaderUniversal;
 
     private Camera cam;
 
@@ -28,7 +30,7 @@ public class Renderer extends AbstractRenderer
     private Mat4PerspRH perspective;
     private Mat4OrthoRH orthogonal;
 
-    private OGLTexture2D checker, bricks;
+    private OGLTexture2D checker, bricks, wood;
 
     private boolean initial = true;
 
@@ -40,6 +42,11 @@ public class Renderer extends AbstractRenderer
     private double deltaTick;
 
     private final int[] display = new int[3];
+
+    private Mat4 lightView, lightProjection;
+
+    private OGLRenderTarget renderTarget;
+    private OGLTexture2D.Viewer viewer;
 
     public void init()
     {
@@ -59,9 +66,7 @@ public class Renderer extends AbstractRenderer
         torus.translate(-2, 2, 0);
 
         shaderAxis = ShaderUtils.loadProgram("/axis");
-        shaderPlane = ShaderUtils.loadProgram("/plane", "/universal");
-        shaderSphere = ShaderUtils.loadProgram("/sphere", "/universal");
-        shaderTorus = ShaderUtils.loadProgram("/torus", "/universal");
+        shaderUniversal = ShaderUtils.loadProgram("/universal");
 
         cam = new Camera().withPosition(new Vec3D(0, -2, 2))
                 .withAzimuth(Math.toRadians(90))
@@ -77,11 +82,19 @@ public class Renderer extends AbstractRenderer
         {
             checker = new OGLTexture2D("checker.png");
             bricks = new OGLTexture2D("bricks.png");
+            wood = new OGLTexture2D("oak.png");
         }
         catch (IOException exception)
         {
             throw new RuntimeException(exception);
         }
+
+        renderTarget = new OGLRenderTarget(width, height);
+
+        lightView = new Mat4ViewRH(new Vec3D(2, -2, 4), new Vec3D(-1, 1, -1), new Vec3D(0, 0, 1));
+        lightProjection = new Mat4OrthoRH(20, 20, 0.1, 100);
+
+        viewer = new OGLTexture2D.Viewer();
     }
 
     public void display()
@@ -90,46 +103,80 @@ public class Renderer extends AbstractRenderer
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // axis
-        glUseProgram(shaderAxis);
+        renderTarget.bind();
 
-        setUniversalUniforms(shaderAxis, axis);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        axis.getBuffers().draw(GL_LINES, shaderAxis);
+        render(true);
 
-        // plane
-        glUseProgram(shaderPlane);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        setUniversalUniforms(shaderPlane, plane);
+        render(false);
 
-        checker.bind();
-
-        plane.getBuffers().draw(GL_TRIANGLES, shaderPlane);
-
-        // sphere
-        glUseProgram(shaderSphere);
-
-        setUniversalUniforms(shaderSphere, sphere);
-
-        bricks.bind();
-
-        sphere.getBuffers().draw(GL_TRIANGLES, shaderSphere);
-
-        // torus
-        glUseProgram(shaderTorus);
-
-        setUniversalUniforms(shaderTorus, torus);
-
-        bricks.bind();
-
-        torus.getBuffers().draw(GL_TRIANGLES, shaderTorus);
+        viewer.view(renderTarget.getDepthTexture(), 0.6, -1, 0.4);
     }
 
-    private void setUniversalUniforms(int shader, Mesh mesh)
+    private void render(boolean lightDrawn)
+    {
+        if (!lightDrawn)
+        {
+            // axis
+            glUseProgram(shaderAxis);
+
+            setUniversalUniforms(shaderAxis, axis, false);
+
+            axis.getBuffers().draw(GL_LINES, shaderAxis);
+        }
+
+        glUseProgram(shaderUniversal);
+
+        // plane
+        setUniversalUniforms(shaderUniversal, plane, lightDrawn);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "receive_shadows"), 1);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "plane"), 1);
+
+        checker.bind(shaderUniversal, "bitmap", 0);
+
+        plane.getBuffers().draw(GL_TRIANGLES, shaderUniversal);
+
+        // sphere
+        setUniversalUniforms(shaderUniversal, sphere, lightDrawn);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "receive_shadows"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "plane"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "sphere"), 1);
+
+        if (!lightDrawn)
+        {
+            renderTarget.getDepthTexture().bind(shaderUniversal, "shadowmap", 1);
+            glUniformMatrix4fv(glGetUniformLocation(shaderUniversal, "light_view_projection"), false, (lightView.mul(lightProjection)).floatArray());
+        }
+
+        bricks.bind(shaderUniversal, "bitmap", 0);
+
+        sphere.getBuffers().draw(GL_TRIANGLES, shaderUniversal);
+
+        // torus
+        setUniversalUniforms(shaderUniversal, torus, lightDrawn);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "receive_shadows"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "sphere"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "torus"), 1);
+
+        if (!lightDrawn)
+        {
+            renderTarget.getDepthTexture().bind(shaderUniversal, "shadowmap", 1);
+            glUniformMatrix4fv(glGetUniformLocation(shaderUniversal, "light_view_projection"), false, (lightView.mul(lightProjection)).floatArray());
+        }
+
+        wood.bind(shaderUniversal, "bitmap", 0);
+
+        torus.getBuffers().draw(GL_TRIANGLES, shaderUniversal);
+    }
+
+    private void setUniversalUniforms(int shader, Mesh mesh, boolean lightDrawn)
     {
         glUniformMatrix4fv(glGetUniformLocation(shader, "model"), false, mesh.getModel().floatArray());
-        glUniformMatrix4fv(glGetUniformLocation(shader, "view"), false, cam.getViewMatrix().floatArray());
-        glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), false, projection.floatArray());
+        glUniformMatrix4fv(glGetUniformLocation(shader, "view"), false, lightDrawn ? lightView.floatArray() : cam.getViewMatrix().floatArray());
+        glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), false, lightDrawn ? lightProjection.floatArray() : projection.floatArray());
 
         glUniform1iv(glGetUniformLocation(shader, "display"), display);
     }
