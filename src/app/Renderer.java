@@ -55,9 +55,9 @@ public class Renderer extends AbstractRenderer
         glClearColor(0.1F, 0.1F, 0.1F, 1.0F);
 
         axis = new Axis();
-        plane = new Grid(2, 2);
-        sphere = new Grid(20, 20);
-        torus = new Grid(20, 20);
+        plane = new Grid(2, 2, true);
+        sphere = new Grid(20, 20, true);
+        torus = new Grid(20, 20, true);
 
         plane.scale(8, 8, 1);
 
@@ -137,7 +137,7 @@ public class Renderer extends AbstractRenderer
 
         checker.bind(shaderUniversal, "bitmap", 0);
 
-        plane.getBuffers().draw(GL_TRIANGLES, shaderUniversal);
+        plane.getBuffers().draw(GL_TRIANGLE_STRIP, shaderUniversal);
 
         // sphere
         setUniversalUniforms(shaderUniversal, sphere, lightDrawn);
@@ -153,7 +153,7 @@ public class Renderer extends AbstractRenderer
 
         bricks.bind(shaderUniversal, "bitmap", 0);
 
-        sphere.getBuffers().draw(GL_TRIANGLES, shaderUniversal);
+        sphere.getBuffers().draw(GL_TRIANGLE_STRIP, shaderUniversal);
 
         // torus
         setUniversalUniforms(shaderUniversal, torus, lightDrawn);
@@ -169,7 +169,7 @@ public class Renderer extends AbstractRenderer
 
         wood.bind(shaderUniversal, "bitmap", 0);
 
-        torus.getBuffers().draw(GL_TRIANGLES, shaderUniversal);
+        torus.getBuffers().draw(GL_TRIANGLE_STRIP, shaderUniversal);
     }
 
     private void setUniversalUniforms(int shader, Mesh mesh, boolean lightDrawn)

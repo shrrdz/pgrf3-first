@@ -4,7 +4,7 @@ import lwjglutils.OGLBuffers;
 
 public class Grid extends Mesh
 {
-    public Grid(int m, int n)
+    public Grid(int m, int n, boolean TRIANGLE_STRIP)
     {
         vertexBuffer = new float[2 * m * n];
         indexBuffer = new int[3 * 2 * (m - 1) * (n - 1)];
@@ -22,19 +22,48 @@ public class Grid extends Mesh
 
         index = 0;
 
-        for (int i = 0; i < m - 1; i++)
+        if (TRIANGLE_STRIP)
         {
-            int offset = i * n;
+            // resize index buffer to include degenerate triangles
+            indexBuffer = new int[(m - 1) * (2 * n + 2) - 2];
 
-            for (int j = 0; j < n - 1; j++)
+            for (int i = 0; i < m - 1; i++)
             {
-                indexBuffer[index++] = j + offset;
-                indexBuffer[index++] = j + n + offset;
-                indexBuffer[index++] = j + 1 + offset;
+                int offset = i * n;
+                int otherOffset = (i + 1) * n;
 
-                indexBuffer[index++] = j + 1 + offset;
-                indexBuffer[index++] = j + n + offset;
-                indexBuffer[index++] = j + n + 1 + offset;
+                // generate alternating indices
+                // for the current row and the next row
+                for (int j = 0; j < n; j++)
+                {
+                    indexBuffer[index++] = j + offset;
+                    indexBuffer[index++] = j + otherOffset;
+                }
+
+                // add degenerate triangles (except on the last strip)
+                if (i < m - 2)
+                {
+                    indexBuffer[index++] = (n - 1) + otherOffset;
+                    indexBuffer[index++] = (i + 1) * n;
+                }
+            }
+        }
+        else // GL_TRIANGLES
+        {
+            for (int i = 0; i < m - 1; i++)
+            {
+                int offset = i * n;
+
+                for (int j = 0; j < n - 1; j++)
+                {
+                    indexBuffer[index++] = j + offset;
+                    indexBuffer[index++] = j + n + offset;
+                    indexBuffer[index++] = j + 1 + offset;
+
+                    indexBuffer[index++] = j + 1 + offset;
+                    indexBuffer[index++] = j + n + offset;
+                    indexBuffer[index++] = j + n + 1 + offset;
+                }
             }
         }
 
