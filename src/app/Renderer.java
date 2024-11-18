@@ -41,6 +41,8 @@ public class Renderer extends AbstractRenderer
 
     private double deltaTick;
 
+    private int polygonMode;
+
     private final int[] display = new int[3];
 
     private Mat4 lightView, lightProjection;
@@ -100,6 +102,13 @@ public class Renderer extends AbstractRenderer
     public void display()
     {
         deltaTick = LwjglWindow.deltaTick();
+
+        switch (polygonMode)
+        {
+            case 0: glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); break;
+            case 1: glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); break;
+            case 2: glPolygonMode(GL_FRONT_AND_BACK, GL_POINT); break;
+        }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -220,9 +229,14 @@ public class Renderer extends AbstractRenderer
             {
                 cam = cam.up(observerSpeed * deltaTick);
             }
+            
+            if (key == GLFW_KEY_R && action == GLFW_PRESS)
+            {
+                polygonMode = polygonMode < 2 ? polygonMode + 1 : 0;
+            }
 
             // default display
-            if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+            if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
             {
                 Arrays.fill(display, 0);
             }
