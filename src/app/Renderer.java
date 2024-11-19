@@ -19,7 +19,7 @@ import static org.lwjgl.opengl.GL30.*;
 
 public class Renderer extends AbstractRenderer
 {
-    private Mesh axis, plane, sphere, torus;
+    private Mesh axis, plane, sphere, torus, wave;
 
     private int shaderAxis, shaderUniversal;
 
@@ -30,7 +30,7 @@ public class Renderer extends AbstractRenderer
     private Mat4PerspRH perspective;
     private Mat4OrthoRH orthogonal;
 
-    private OGLTexture2D checker, bricks, wood;
+    private OGLTexture2D checker, bricks, wood, sand;
 
     private boolean initial = true;
 
@@ -50,6 +50,8 @@ public class Renderer extends AbstractRenderer
     private OGLRenderTarget renderTarget;
     private OGLTexture2D.Viewer viewer;
 
+    private float theta;
+
     public void init()
     {
         glEnable(GL_DEPTH_TEST);
@@ -60,12 +62,15 @@ public class Renderer extends AbstractRenderer
         plane = new Grid(2, 2, true);
         sphere = new Grid(20, 20, true);
         torus = new Grid(20, 20, true);
+        wave = new Grid(20, 20, true);
 
-        plane.scale(8, 8, 1);
+        plane.scale(16, 16, 1);
+        wave.scale(2, 2, 2);
 
         plane.translate(0, 0, -1.5);
-        sphere.translate(2, 2, 0);
-        torus.translate(-2, 2, 0);
+        sphere.translate(4, 2, 0);
+        torus.translate(-4, 2, 0);
+        wave.translate(0, 6, 1);
 
         shaderAxis = ShaderUtils.loadProgram("/axis");
         shaderUniversal = ShaderUtils.loadProgram("/universal");
@@ -85,6 +90,7 @@ public class Renderer extends AbstractRenderer
             checker = new OGLTexture2D("checker.png");
             bricks = new OGLTexture2D("bricks.png");
             wood = new OGLTexture2D("oak.png");
+            sand = new OGLTexture2D("sand.png");
         }
         catch (IOException exception)
         {
@@ -102,6 +108,8 @@ public class Renderer extends AbstractRenderer
     public void display()
     {
         deltaTick = LwjglWindow.deltaTick();
+
+        theta += 4 * deltaTick;
 
         switch (polygonMode)
         {
@@ -179,6 +187,24 @@ public class Renderer extends AbstractRenderer
         wood.bind(shaderUniversal, "bitmap", 0);
 
         torus.getBuffers().draw(GL_TRIANGLE_STRIP, shaderUniversal);
+
+        // wave
+        setUniversalUniforms(shaderUniversal, wave, lightDrawn);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "receive_shadows"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "torus"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "wave"), 1);
+
+        glUniform1f(glGetUniformLocation(shaderUniversal, "theta"), theta);
+
+        if (!lightDrawn)
+        {
+            renderTarget.getDepthTexture().bind(shaderUniversal, "shadowmap", 1);
+            glUniformMatrix4fv(glGetUniformLocation(shaderUniversal, "light_view_projection"), false, (lightView.mul(lightProjection)).floatArray());
+        }
+
+        sand.bind(shaderUniversal, "bitmap", 0);
+
+        wave.getBuffers().draw(GL_TRIANGLE_STRIP, shaderUniversal);
     }
 
     private void setUniversalUniforms(int shader, Mesh mesh, boolean lightDrawn)

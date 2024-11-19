@@ -11,6 +11,9 @@ uniform mat4 light_view_projection;
 uniform bool plane;
 uniform bool sphere;
 uniform bool torus;
+uniform bool wave;
+
+uniform float theta;
 
 out vec3 frag_normal;
 out vec2 frag_texcoord;
@@ -25,7 +28,6 @@ const mat4 bias_matrix = mat4
     0.0, 0.0, 0.5, 0.0,
     0.5, 0.5, 0.5, 1.0
 );
-
 
 const float r = 1;
 
@@ -61,18 +63,30 @@ vec3 calculate_torus_normal(float tube_angle, float azimuthal_angle)
     return vec3(x, y, z);
 }
 
+float calculate_wave(float x, float y)
+{
+    return 0.5 * cos(sqrt(20 * pow(x, 2) + 20 * pow(y, 2)) + theta);
+}
+
+vec3 calculate_wave_normal(float x, float y, float z)
+{
+    vec3 dx = vec3(x + 0.001, y, calculate_wave(x + 0.001, y)) - vec3(x, y, z);
+    vec3 dy = vec3(x, y + 0.001, calculate_wave(x, y + 0.001)) - vec3(x, y, z);
+
+    return normalize(cross(dx, dy));
+}
+
 void main()
 {
     // spherical coordinate system
     float azimuth = in_position.x * 2 * PI; // azimuthal angle (phi)
     float zenith  = in_position.y * PI;     // polar angle (theta)
 
-    vec3 position;
+    vec3 position = vec3(in_position * 2 - 1, 0);
     vec2 position_twopi = in_position * 2 * PI;
 
     if (plane)
     {
-        position = vec3(in_position * 2 - 1, 0);
         frag_normal = transpose(inverse(mat3(model))) * vec3(0, 0, 1);
     }
     else if (sphere)
@@ -84,6 +98,13 @@ void main()
     {
         position = calculate_torus(position_twopi.x, position_twopi.y);
         frag_normal = transpose(inverse(mat3(model))) * calculate_torus_normal(position_twopi.x, position_twopi.y);
+    }
+    else if (wave)
+    {
+        float z = calculate_wave(position.x, position.y);
+
+        position.z = z;
+        frag_normal = transpose(inverse(mat3(model))) * calculate_wave_normal(position.x, position.y, position.z);
     }
 
     frag_texcoord = in_position;
