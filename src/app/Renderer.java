@@ -19,7 +19,7 @@ import static org.lwjgl.opengl.GL30.*;
 
 public class Renderer extends AbstractRenderer
 {
-    private Mesh axis, plane, sphere, torus, wave;
+    private Mesh axis, plane, sphere, fountain, torus, wave;
 
     private int shaderAxis, shaderUniversal;
 
@@ -30,7 +30,7 @@ public class Renderer extends AbstractRenderer
     private Mat4PerspRH perspective;
     private Mat4OrthoRH orthogonal;
 
-    private OGLTexture2D checker, bricks, wood, sand;
+    private OGLTexture2D checker, bricks, cobblestone, wood, sand;
 
     private boolean initial = true;
 
@@ -61,6 +61,7 @@ public class Renderer extends AbstractRenderer
         axis = new Axis();
         plane = new Grid(2, 2, true);
         sphere = new Grid(20, 20, true);
+        fountain = new Grid(20, 20, true);
         torus = new Grid(20, 20, true);
         wave = new Grid(20, 20, true);
 
@@ -69,13 +70,14 @@ public class Renderer extends AbstractRenderer
 
         plane.translate(0, 0, -1.5);
         sphere.translate(4, 2, 0);
+        fountain.translate(4, -2, 0);
         torus.translate(-4, 2, 0);
         wave.translate(0, 6, 1);
 
         shaderAxis = ShaderUtils.loadProgram("/axis");
         shaderUniversal = ShaderUtils.loadProgram("/universal");
 
-        cam = new Camera().withPosition(new Vec3D(0, -2, 2))
+        cam = new Camera().withPosition(new Vec3D(0, -6, 4))
                 .withAzimuth(Math.toRadians(90))
                 .withZenith(Math.toRadians(-30))
                 .withFirstPerson(true);
@@ -89,6 +91,7 @@ public class Renderer extends AbstractRenderer
         {
             checker = new OGLTexture2D("checker.png");
             bricks = new OGLTexture2D("bricks.png");
+            cobblestone = new OGLTexture2D("cobblestone.png");
             wood = new OGLTexture2D("oak.png");
             sand = new OGLTexture2D("sand.png");
         }
@@ -172,10 +175,26 @@ public class Renderer extends AbstractRenderer
 
         sphere.getBuffers().draw(GL_TRIANGLE_STRIP, shaderUniversal);
 
+        // sphere
+        setUniversalUniforms(shaderUniversal, fountain, lightDrawn);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "receive_shadows"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "sphere"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "fountain"), 1);
+
+        if (!lightDrawn)
+        {
+            renderTarget.getDepthTexture().bind(shaderUniversal, "shadowmap", 1);
+            glUniformMatrix4fv(glGetUniformLocation(shaderUniversal, "light_view_projection"), false, (lightView.mul(lightProjection)).floatArray());
+        }
+
+        cobblestone.bind(shaderUniversal, "bitmap", 0);
+
+        fountain.getBuffers().draw(GL_TRIANGLE_STRIP, shaderUniversal);
+
         // torus
         setUniversalUniforms(shaderUniversal, torus, lightDrawn);
         glUniform1i(glGetUniformLocation(shaderUniversal, "receive_shadows"), 0);
-        glUniform1i(glGetUniformLocation(shaderUniversal, "sphere"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "fountain"), 0);
         glUniform1i(glGetUniformLocation(shaderUniversal, "torus"), 1);
 
         if (!lightDrawn)

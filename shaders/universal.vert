@@ -10,6 +10,7 @@ uniform mat4 light_view_projection;
 
 uniform bool plane;
 uniform bool sphere;
+uniform bool fountain;
 uniform bool torus;
 uniform bool wave;
 
@@ -29,7 +30,7 @@ const mat4 bias_matrix = mat4
     0.5, 0.5, 0.5, 1.0
 );
 
-const float r = 1;
+float r = 1;
 
 vec3 calculate_sphere(float azimuth, float zenith)
 {
@@ -91,6 +92,13 @@ void main()
     }
     else if (sphere)
     {
+        position = calculate_sphere(azimuth, zenith);
+        frag_normal = transpose(inverse(mat3(model))) * calculate_sphere(azimuth, zenith);
+    }
+    else if (fountain)
+    {
+        r = 1.0 * cos(4.0 * zenith);
+
         position = calculate_sphere(azimuth, zenith);
         frag_normal = transpose(inverse(mat3(model))) * calculate_sphere(azimuth, zenith);
     }
