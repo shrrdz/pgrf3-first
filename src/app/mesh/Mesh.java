@@ -26,16 +26,16 @@ public abstract class Mesh
 
     public void translate(double x, double y, double z)
     {
-        this.model = model.mul(new Mat4Transl(x, y, z));
+        this.model = new Mat4Transl(x, y, z).mul(model);
     }
 
     public void rotate(double x, double y, double z)
     {
-        this.model = model.mul(new Mat4RotXYZ(Math.toRadians(x), Math.toRadians(y), Math.toRadians(z)));
+        this.model = new Mat4RotXYZ(Math.toRadians(x), Math.toRadians(y), Math.toRadians(z)).mul(model);
     }
 
     public void scale(double x, double y, double z)
     {
-        this.model = model.mul(new Mat4Scale(x, y, z));
+        this.model = new Mat4Scale(x, y, z).mul(model);
     }
 }

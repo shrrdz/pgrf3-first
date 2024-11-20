@@ -72,7 +72,7 @@ public class Renderer extends AbstractRenderer
         sphere.translate(4, 2, 0);
         fountain.translate(4, -2, 0);
         torus.translate(-4, 2, 0);
-        wave.translate(0, 6, 1);
+        wave.translate(0, 4, 1);
 
         shaderAxis = ShaderUtils.loadProgram("/axis");
         shaderUniversal = ShaderUtils.loadProgram("/universal");
@@ -224,6 +224,11 @@ public class Renderer extends AbstractRenderer
         sand.bind(shaderUniversal, "bitmap", 0);
 
         wave.getBuffers().draw(GL_TRIANGLE_STRIP, shaderUniversal);
+
+        // real-time transformations
+        sphere.translate(0, 0, -Math.sin(theta) / 24);
+
+        torus.rotate(0, 45 * deltaTick, 0);
     }
 
     private void setUniversalUniforms(int shader, Mesh mesh, boolean lightDrawn)
