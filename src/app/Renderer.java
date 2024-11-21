@@ -19,7 +19,7 @@ import static org.lwjgl.opengl.GL30.*;
 
 public class Renderer extends AbstractRenderer
 {
-    private Mesh axis, plane, sphere, fountain, torus, wave;
+    private Mesh axis, plane, sphere, fountain, torus, wave, point;
 
     private int shaderAxis, shaderUniversal;
 
@@ -37,7 +37,7 @@ public class Renderer extends AbstractRenderer
     private final double[] previousX = new double[1];
     private final double[] previousY = new double[1];
 
-    private final double observerSpeed = 4;
+    private final double translationSpeed = 6;
 
     private double deltaTick;
 
@@ -49,6 +49,8 @@ public class Renderer extends AbstractRenderer
 
     private OGLRenderTarget renderTarget;
     private OGLTexture2D.Viewer viewer;
+
+    private Vec3D pointLightPosition = new Vec3D(0, 0, 0);
 
     private float theta;
 
@@ -64,15 +66,18 @@ public class Renderer extends AbstractRenderer
         fountain = new Grid(20, 20, true);
         torus = new Grid(20, 20, true);
         wave = new Grid(20, 20, true);
+        point =  new Grid(20, 20, true);
 
         plane.scale(16, 16, 1);
         wave.scale(2, 2, 2);
+        point.scale(0.5, 0.5, 0.5);
 
         plane.translate(0, 0, -1.5);
         sphere.translate(4, 2, 0);
         fountain.translate(4, -2, 0);
         torus.translate(-4, 2, 0);
         wave.translate(0, 4, 1);
+        point.translate(pointLightPosition.getX(), pointLightPosition.getY(), pointLightPosition.getZ());
 
         shaderAxis = ShaderUtils.loadProgram("/axis");
         shaderUniversal = ShaderUtils.loadProgram("/universal");
@@ -150,9 +155,15 @@ public class Renderer extends AbstractRenderer
 
         glUseProgram(shaderUniversal);
 
+        glUniform1f(glGetUniformLocation(shaderUniversal, "theta"), theta);
+
+        glUniform3f(glGetUniformLocation(shaderUniversal, "eye"), (float) cam.getPosition().getX(), (float) cam.getPosition().getY(), (float) cam.getPosition().getZ());
+        glUniform3f(glGetUniformLocation(shaderUniversal, "point_position"), (float) pointLightPosition.getX(), (float) pointLightPosition.getY(), (float) pointLightPosition.getZ());
+
         // plane
         setUniversalUniforms(shaderUniversal, plane, lightDrawn);
         glUniform1i(glGetUniformLocation(shaderUniversal, "receive_shadows"), 1);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "light_source"), 0);
         glUniform1i(glGetUniformLocation(shaderUniversal, "plane"), 1);
 
         checker.bind(shaderUniversal, "bitmap", 0);
@@ -162,6 +173,7 @@ public class Renderer extends AbstractRenderer
         // sphere
         setUniversalUniforms(shaderUniversal, sphere, lightDrawn);
         glUniform1i(glGetUniformLocation(shaderUniversal, "receive_shadows"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "light_source"), 0);
         glUniform1i(glGetUniformLocation(shaderUniversal, "plane"), 0);
         glUniform1i(glGetUniformLocation(shaderUniversal, "sphere"), 1);
 
@@ -178,6 +190,7 @@ public class Renderer extends AbstractRenderer
         // sphere
         setUniversalUniforms(shaderUniversal, fountain, lightDrawn);
         glUniform1i(glGetUniformLocation(shaderUniversal, "receive_shadows"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "light_source"), 0);
         glUniform1i(glGetUniformLocation(shaderUniversal, "sphere"), 0);
         glUniform1i(glGetUniformLocation(shaderUniversal, "fountain"), 1);
 
@@ -194,6 +207,7 @@ public class Renderer extends AbstractRenderer
         // torus
         setUniversalUniforms(shaderUniversal, torus, lightDrawn);
         glUniform1i(glGetUniformLocation(shaderUniversal, "receive_shadows"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "light_source"), 0);
         glUniform1i(glGetUniformLocation(shaderUniversal, "fountain"), 0);
         glUniform1i(glGetUniformLocation(shaderUniversal, "torus"), 1);
 
@@ -210,10 +224,9 @@ public class Renderer extends AbstractRenderer
         // wave
         setUniversalUniforms(shaderUniversal, wave, lightDrawn);
         glUniform1i(glGetUniformLocation(shaderUniversal, "receive_shadows"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "light_source"), 0);
         glUniform1i(glGetUniformLocation(shaderUniversal, "torus"), 0);
         glUniform1i(glGetUniformLocation(shaderUniversal, "wave"), 1);
-
-        glUniform1f(glGetUniformLocation(shaderUniversal, "theta"), theta);
 
         if (!lightDrawn)
         {
@@ -224,6 +237,17 @@ public class Renderer extends AbstractRenderer
         sand.bind(shaderUniversal, "bitmap", 0);
 
         wave.getBuffers().draw(GL_TRIANGLE_STRIP, shaderUniversal);
+
+        // point
+        setUniversalUniforms(shaderUniversal, point, lightDrawn);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "receive_shadows"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "light_source"), 1);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "wave"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "sphere"), 1);
+
+        sand.bind(shaderUniversal, "bitmap", 0);
+
+        point.getBuffers().draw(GL_TRIANGLE_STRIP, shaderUniversal);
 
         // real-time transformations
         sphere.translate(0, 0, -Math.sin(theta) / 24);
@@ -252,32 +276,56 @@ public class Renderer extends AbstractRenderer
 
             if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             {
-                cam = cam.forward(observerSpeed * deltaTick);
+                cam = cam.forward(translationSpeed * deltaTick);
             }
 
             if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
             {
-                cam = cam.backward(observerSpeed * deltaTick);
+                cam = cam.backward(translationSpeed * deltaTick);
             }
 
             if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
             {
-                cam = cam.left(observerSpeed * deltaTick);
+                cam = cam.left(translationSpeed * deltaTick);
             }
 
             if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             {
-                cam = cam.right(observerSpeed * deltaTick);
+                cam = cam.right(translationSpeed * deltaTick);
             }
 
             if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
             {
-                cam = cam.down(observerSpeed * deltaTick);
+                cam = cam.down(translationSpeed * deltaTick);
             }
 
             if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
             {
-                cam = cam.up(observerSpeed * deltaTick);
+                cam = cam.up(translationSpeed * deltaTick);
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+            {
+                point.translate(0, translationSpeed * deltaTick, 0);
+                pointLightPosition = pointLightPosition.add(new Vec3D(0, translationSpeed * deltaTick, 0));
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+            {
+                point.translate(0, -translationSpeed * deltaTick, 0);
+                pointLightPosition = pointLightPosition.add(new Vec3D(0, -translationSpeed * deltaTick, 0));
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+            {
+                point.translate(-translationSpeed * deltaTick, 0, 0);
+                pointLightPosition = pointLightPosition.add(new Vec3D(-translationSpeed * deltaTick, 0, 0));
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+            {
+                point.translate(translationSpeed * deltaTick, 0, 0);
+                pointLightPosition = pointLightPosition.add(new Vec3D(translationSpeed * deltaTick, 0, 0));
             }
             
             if (key == GLFW_KEY_R && action == GLFW_PRESS)

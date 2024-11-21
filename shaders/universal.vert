@@ -16,6 +16,7 @@ uniform bool wave;
 
 uniform float theta;
 
+out vec3 frag_position;
 out vec3 frag_normal;
 out vec2 frag_texcoord;
 out vec4 frag_shadowcoord;
@@ -115,6 +116,7 @@ void main()
         frag_normal = transpose(inverse(mat3(model))) * calculate_wave_normal(position.x, position.y, position.z);
     }
 
+    frag_position = vec3(model * vec4(position, 1.0));
     frag_texcoord = in_position;
 
     gl_Position = projection * view * model * vec4(position,  1.0);
