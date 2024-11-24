@@ -20,6 +20,7 @@ uniform float theta;
 out vec3 frag_position;
 out vec3 frag_normal;
 out vec2 frag_texcoord;
+out vec4 frag_relative_position;
 out vec4 frag_shadowcoord;
 
 const float PI = 3.1415927F;
@@ -127,9 +128,11 @@ void main()
     frag_position = vec3(model * vec4(position, 1.0));
     frag_texcoord = in_position;
 
-    gl_Position = projection * view * model * vec4(position,  1.0);
+    frag_relative_position = view * vec4(frag_position, 1.0);
 
     mat4 depth_bias_matrix = bias_matrix * light_view_projection;
 
     frag_shadowcoord = depth_bias_matrix * (model * vec4(position, 1));
+
+    gl_Position = projection * view * model * vec4(position,  1.0);
 }

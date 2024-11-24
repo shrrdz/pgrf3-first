@@ -3,6 +3,7 @@
 in vec3 frag_position;
 in vec3 frag_normal;
 in vec2 frag_texcoord;
+in vec4 frag_relative_position;
 in vec4 frag_shadowcoord;
 
 uniform bool display[3];
@@ -32,7 +33,12 @@ const float directional_intensity = 1;
 const vec3 point_color = vec3(0, 1, 1);
 const float point_intensity = 4;
 
+// fog constants
+const float fog_start = 5.0;
+const float fog_end = 20.0;
+
 vec3 base_color;
+vec3 sky_color = vec3(0.1, 0.1, 0.1);
 
 float linearize_depth(float depth)
 {
@@ -139,14 +145,21 @@ void main()
     }
     else
     {
-        float visibility = 1;
+        float gradient = 1;
         float bias = 0.005;
 
         if(receive_shadows && texture(shadowmap, frag_shadowcoord.xy).z < frag_shadowcoord.z - bias)
         {
-            visibility = 0.5;
+            gradient = 0.5;
         }
 
-        frag_color = light_source ? vec4(point_color, 1.0) : visibility * vec4(total, 1.0);
+        frag_color = light_source ? vec4(point_color, 1.0) : gradient * vec4(total, 1.0);
     }
+
+    // calculate fog
+    float distance = length(frag_relative_position.xyz);
+    float visibility = clamp((fog_end - distance) / (fog_end - fog_start), 0.0, 1.0);
+
+    // apply fog
+    frag_color = mix(vec4(sky_color, 1), frag_color, visibility);
 }
