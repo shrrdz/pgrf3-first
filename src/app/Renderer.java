@@ -19,7 +19,7 @@ import static org.lwjgl.opengl.GL30.*;
 
 public class Renderer extends AbstractRenderer
 {
-    private Mesh axis, plane, sphere, fountain, torus, wave, point;
+    private Mesh axis, plane, sphere, fountain, torus, wave, shell, point;
 
     private int shaderAxis, shaderUniversal;
 
@@ -30,7 +30,7 @@ public class Renderer extends AbstractRenderer
     private Mat4PerspRH perspective;
     private Mat4OrthoRH orthogonal;
 
-    private OGLTexture2D checker, bricks, cobblestone, wood, sand;
+    private OGLTexture2D checker, bricks, cobblestone, wood, sand, peel;
 
     private boolean initial = true;
 
@@ -66,6 +66,7 @@ public class Renderer extends AbstractRenderer
         fountain = new Grid(20, 20, true);
         torus = new Grid(20, 20, true);
         wave = new Grid(20, 20, true);
+        shell =  new Grid(20, 20, true);
         point =  new Grid(20, 20, true);
 
         plane.scale(16, 16, 1);
@@ -76,7 +77,8 @@ public class Renderer extends AbstractRenderer
         sphere.translate(4, 2, 0);
         fountain.translate(4, -2, 0);
         torus.translate(-4, 2, 0);
-        wave.translate(0, 4, 1);
+        wave.translate(0, 4, 0.5);
+        shell.translate(-4, -2, -1);
         point.translate(pointLightPosition.getX(), pointLightPosition.getY(), pointLightPosition.getZ());
 
         shaderAxis = ShaderUtils.loadProgram("/axis");
@@ -99,6 +101,7 @@ public class Renderer extends AbstractRenderer
             cobblestone = new OGLTexture2D("cobblestone.png");
             wood = new OGLTexture2D("oak.png");
             sand = new OGLTexture2D("sand.png");
+            peel = new OGLTexture2D("sponge.png");
         }
         catch (IOException exception)
         {
@@ -245,14 +248,24 @@ public class Renderer extends AbstractRenderer
         glUniform1i(glGetUniformLocation(shaderUniversal, "wave"), 0);
         glUniform1i(glGetUniformLocation(shaderUniversal, "sphere"), 1);
 
-        sand.bind(shaderUniversal, "bitmap", 0);
-
         point.getBuffers().draw(GL_TRIANGLE_STRIP, shaderUniversal);
+
+        // shell
+        setUniversalUniforms(shaderUniversal, shell, lightDrawn);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "receive_shadows"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "light_source"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "sphere"), 0);
+        glUniform1i(glGetUniformLocation(shaderUniversal, "shell"), 1);
+
+        peel.bind(shaderUniversal, "bitmap", 0);
+
+        shell.getBuffers().draw(GL_TRIANGLE_STRIP, shaderUniversal);
 
         // real-time transformations
         sphere.translate(0, 0, -Math.sin(theta) / 24);
 
         torus.rotate(0, 45 * deltaTick, 0);
+        shell.rotate(0, 0, 45 * deltaTick);
     }
 
     private void setUniversalUniforms(int shader, Mesh mesh, boolean lightDrawn)

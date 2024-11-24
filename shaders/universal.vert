@@ -13,6 +13,7 @@ uniform bool sphere;
 uniform bool fountain;
 uniform bool torus;
 uniform bool wave;
+uniform bool shell;
 
 uniform float theta;
 
@@ -114,6 +115,13 @@ void main()
 
         position.z = z;
         frag_normal = transpose(inverse(mat3(model))) * calculate_wave_normal(position.x, position.y, position.z);
+    }
+    else if (shell)
+    {
+        r = 1.0 * acos(zenith) * atan(azimuth);
+
+        position = calculate_sphere(azimuth, zenith);
+        frag_normal = transpose(inverse(mat3(model))) * calculate_sphere(azimuth, zenith);
     }
 
     frag_position = vec3(model * vec4(position, 1.0));
